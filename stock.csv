@@ -1,0 +1,46 @@
+import requests
+from bs4 import BeautifulSoup
+
+headers = {'User-Agent':
+           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'}
+
+
+## 한번에 for 문으로 2,3,4페이지를 추출하지 못할 것 같으니 나눠서 해보자 
+
+
+data_list = []
+
+
+#1) 4페이지 
+response1 = requests.get('https://finance.naver.com/item/sise_day.naver?code=005930&page=4', headers=headers)
+soup = BeautifulSoup(response1.text, 'html.parser')
+
+for data in soup.select('table.type2 > tr')[2:6]: #2,3,4,5 인덱스 추출 
+    if data.select_one('th') == None and len(data.select('td')) == 7: #테이블헤드 아니고, td를 7개 갖고 있어야함 
+        date = data.select('td')[0].text #날짜
+        price = data.select('td.num')[0].text #종가 
+        data_list.append((date, price))
+
+#2) 3페이지
+response2 = requests.get('https://finance.naver.com/item/sise_day.naver?code=005930&page=3', headers=headers)
+soup = BeautifulSoup(response2.text, 'html.parser')
+
+for data in soup.select('table.type2 > tr'):
+    if data.select_one('th') == None and len(data.select('td')) == 7:
+        date = data.select('td')[0].text 
+        price = data.select('td.num')[0].text
+        data_list.append((date, price))
+
+
+#3) 2페이지 
+response3 = requests.get('https://finance.naver.com/item/sise_day.naver?code=005930&page=2', headers=headers)
+soup = BeautifulSoup(response3.text, 'html.parser')
+
+for data in soup.select('table.type2 > tr')[4:]: #8.31일 밑으로 
+    if data.select_one('th') == None and len(data.select('td')) == 7:
+        date = data.select('td')[0].text
+        price = data.select('td.num')[0].text
+        data_list.append((date, price))
+
+data_list.sort()
+print(data_list)
